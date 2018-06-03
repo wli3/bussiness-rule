@@ -59,8 +59,8 @@ namespace BussinessRule
             Good = good;
         }
 
-        public string Action { get; }
-        public IGood Good { get; }
+        private string Action { get; }
+        private IGood Good { get; }
 
         public string WorkerInstruction()
         {
@@ -88,7 +88,7 @@ namespace BussinessRule
             Membership = membership;
         }
 
-        public string Membership { get; }
+        private string Membership { get; }
 
         public string WorkerInstruction()
         {
