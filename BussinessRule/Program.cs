@@ -4,6 +4,7 @@ namespace BussinessRule
 {
     public interface IGood
     {
+        string Name { get; }
     }
 
     public class Book : IGood
@@ -24,6 +25,8 @@ namespace BussinessRule
         }
 
         public string Membership { get; }
+
+        public string Name => $"{Name}'s Membership";
     }
 
     public interface IRule
@@ -33,6 +36,7 @@ namespace BussinessRule
 
     public interface ICommand
     {
+        string WorkerInstruction();
     }
 
 
@@ -57,6 +61,11 @@ namespace BussinessRule
 
         public string Action { get; }
         public IGood Good { get; }
+
+        public string WorkerInstruction()
+        {
+            return $"Do {Action} For {Good.Name}";
+        }
     }
 
 
@@ -80,6 +89,11 @@ namespace BussinessRule
         }
 
         public string Membership { get; }
+
+        public string WorkerInstruction()
+        {
+            return $"Active membership for {Membership}";
+        }
     }
 
 
