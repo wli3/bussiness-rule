@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace BussinessRule
 {
@@ -25,13 +26,13 @@ namespace BussinessRule
         }
 
         public string Membership { get; }
-
         public string Name => $"{Name}'s Membership";
     }
 
     public interface IRule
     {
-        IReadOnlyCollection<ICommand> Handle(IGood good);
+        IReadOnlyCollection<ICommand> Handle(MembershipGood good);
+        IReadOnlyCollection<ICommand> Handle(Book good);
     }
 
     public interface ICommand
@@ -39,15 +40,16 @@ namespace BussinessRule
         string WorkerInstruction();
     }
 
-
     public class SlipForShippingRule : IRule
     {
-        public IReadOnlyCollection<ICommand> Handle(IGood good)
+        public IReadOnlyCollection<ICommand> Handle(MembershipGood good)
         {
-            if (good is Book)
-                return new[] {new SlipCommand("Shipping", good)};
-
             return new ICommand[0];
+        }
+
+        public IReadOnlyCollection<ICommand> Handle(Book good)
+        {
+            return new[] {new SlipCommand("Shipping", good)};
         }
     }
 
@@ -68,15 +70,15 @@ namespace BussinessRule
         }
     }
 
-
     public class ActivateRule : IRule
     {
-        public IReadOnlyCollection<ICommand> Handle(IGood good)
+        public IReadOnlyCollection<ICommand> Handle(MembershipGood good)
         {
-            var m = good as MembershipGood;
-            if (m != null)
-                return new[] {new ActivateCommand(m.Membership)};
+            return good != null ? new[] {new ActivateCommand(good.Membership)} : new ICommand[0];
+        }
 
+        public IReadOnlyCollection<ICommand> Handle(Book good)
+        {
             return new ICommand[0];
         }
     }
@@ -96,7 +98,6 @@ namespace BussinessRule
         }
     }
 
-
     public class CompositeRule : IRule
     {
         private readonly IRule[] rules;
@@ -106,11 +107,26 @@ namespace BussinessRule
             this.rules = rules;
         }
 
-        public IReadOnlyCollection<ICommand> Handle(IGood good)
+        public IReadOnlyCollection<ICommand> Handle(MembershipGood good)
+        {
+            // Cannot find a better way. Or I need to copy it all the time
+            return Handle(good, (g, rule) => rule.Handle(g));
+        }
+
+        public IReadOnlyCollection<ICommand> Handle(Book good)
+        {
+            return Handle(good, (g, rule) => rule.Handle(g));   
+        }
+        
+        private IReadOnlyCollection<ICommand> Handle<T>(
+            T good,
+            Func<T, IRule, IReadOnlyCollection<ICommand>> rightOverloadOfHandle)
         {
             var commands = new List<ICommand>();
             foreach (var rule in rules)
-                commands.AddRange(rule.Handle(good));
+            {
+                commands.AddRange(rightOverloadOfHandle(good, rule));
+            }
             return commands;
         }
     }
